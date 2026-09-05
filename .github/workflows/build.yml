@@ -1,4 +1,4 @@
-name: Build G-X Windows Guardian
+name: Build G-X Control Center Installer
 
 on:
   push:
@@ -18,10 +18,34 @@ jobs:
 
     - name: Compile Executable
       run: |
-        cl.exe /EHsc /W3 /std:c++17 /O2 main.cpp /Fe:GX_Windows_Guardian.exe gdiplus.lib comctl32.lib user32.lib gdi32.lib shell32.lib advapi32.lib /link /SUBSYSTEM:WINDOWS
+        cl.exe /EHsc /W3 /std:c++17 /O2 main.cpp /Fe:GX_Control_Center.exe gdiplus.lib comctl32.lib user32.lib gdi32.lib shell32.lib advapi32.lib ole32.lib /link /SUBSYSTEM:WINDOWS
 
-    - name: Upload Artifact
+    - name: Install Inno Setup
+      run: choco install innosetup -y
+
+    - name: Create Inno Setup Script
+      run: |
+        echo '[Setup]' > setup.iss
+        echo 'AppName=G-X Control Center' >> setup.iss
+        echo 'AppVersion=3.0.0' >> setup.iss
+        echo 'DefaultDirName={autopf}\GX Control Center' >> setup.iss
+        echo 'DefaultGroupName=G-X Control Center' >> setup.iss
+        echo 'UninstallDisplayIcon={app}\GX_Control_Center.exe' >> setup.iss
+        echo 'Compression=lzma2' >> setup.iss
+        echo 'SolidCompression=yes' >> setup.iss
+        echo 'OutputDir=.' >> setup.iss
+        echo 'OutputBaseFilename=G-X_Setup' >> setup.iss
+        echo '[Files]' >> setup.iss
+        echo 'Source: "GX_Control_Center.exe"; DestDir: "{app}"' >> setup.iss
+        echo '[Icons]' >> setup.iss
+        echo 'Name: "{autodesktop}\G-X Control Center"; Filename: "{app}\GX_Control_Center.exe"' >> setup.iss
+
+    - name: Build Installer Package
+      run: |
+        ISCC.exe setup.iss
+
+    - name: Upload Installer Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: GX_Windows_Guardian_Executable
-        path: "*.exe"
+        name: GX_Control_Center_Setup
+        path: "G-X_Setup.exe"
