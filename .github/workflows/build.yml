@@ -1,0 +1,27 @@
+name: Build G-X Windows Guardian
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Compile Executable
+      run: |
+        cl.exe /EHsc /W3 /std:c++17 /O2 main.cpp /fe:GX_Windows_Guardian.exe gdiplus.lib comctl32.lib user32.lib gdi32.lib shell32.lib advapi32.lib /link /SUBSYSTEM:WINDOWS
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: GX_Windows_Guardian_Executable
+        path: GX_Windows_Guardian.exe
