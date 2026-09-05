@@ -1,5 +1,7 @@
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
+#include <objidl.h>
 #include <gdiplus.h>
 #include <cmath>
 #include <string>
@@ -9,10 +11,8 @@
 
 using namespace Gdiplus;
 
-// متغيرات زوايا الدوران وتفاعلات الإضاءة
 float g_Angle = 0.0f;
 
-// قائمة الأقسام الرئيسية
 const std::vector<std::wstring> g_Modules = {
     L"System Guardian", L"Security Suite", L"Performance Boost",
     L"Windows Repair", L"Privacy Protector", L"Update Center",
@@ -22,36 +22,30 @@ const std::vector<std::wstring> g_Modules = {
 void DrawBrighterSpaceUI(Graphics& g, RECT rect) {
     g.SetSmoothingMode(SmoothingModeAntiAlias);
 
-    // 1. خلفية فضائية مفتوحة وأكثر إضاءة (Bright Deep Teal/Navy)
     LinearGradientBrush bgBrush(
         Rect(0, 0, rect.right, rect.bottom),
-        Color(255, 12, 35, 45),   // لون أفتتح في الأعلى
-        Color(255, 5, 18, 25),    // أسفل الشاشة
+        Color(255, 12, 35, 45),
+        Color(255, 5, 18, 25),
         LinearGradientModeVertical
     );
     g.FillRectangle(&bgBrush, 0, 0, rect.right, rect.bottom);
 
-    // 2. رسم خلفية النجوم والغازات المضيئة (Nebula Glow Effect)
     SolidBrush glowCyan(Color(35, 0, 200, 255));
     SolidBrush glowGreen(Color(45, 0, 255, 150));
     g.FillEllipse(&glowCyan, rect.right / 2 - 300, rect.bottom / 2 - 300, 600, 600);
     g.FillEllipse(&glowGreen, rect.right / 2 - 200, rect.bottom / 2 - 200, 400, 400);
 
-    // 3. النواة المركزية المضيئة جداً (G-X Bright Core)
     int centerX = rect.right / 2;
     int centerY = rect.bottom / 2 - 20;
 
-    // توهج النواة الأخضر الفاتح (Neon Core Glow)
     for (int i = 5; i > 0; --i) {
         Pen glowPen(Color(30 * i, 50, 255, 160), (float)(i * 4));
         g.DrawEllipse(&glowPen, centerX - 110, centerY - 110, 220, 220);
     }
 
-    // دوائر النواة الداخلية
     Pen brightNeonPen(Color(255, 80, 255, 180), 2.5f);
     g.DrawEllipse(&brightNeonPen, centerX - 100, centerY - 100, 200, 200);
 
-    // 4. رسم الأقسام الحلقية المحيطة بالنواة (Orbital Modules)
     int numModules = static_cast<int>(g_Modules.size());
     float radius = 220.0f;
 
@@ -60,29 +54,24 @@ void DrawBrighterSpaceUI(Graphics& g, RECT rect) {
         int modX = static_cast<int>(centerX + radius * cos(currentAngle));
         int modY = static_cast<int>(centerY + radius * sin(currentAngle));
 
-        // خطوط الربط المضيئة بالنواة
         Pen linePen(Color(120, 0, 255, 150), 1.5f);
         g.DrawLine(&linePen, centerX, centerY, modX, modY);
 
-        // أقراص الأقسام المضيئة
         SolidBrush nodeBg(Color(220, 15, 45, 35));
         Pen nodeBorder(Color(255, 100, 255, 200), 2.0f);
         g.FillEllipse(&nodeBg, modX - 35, modY - 35, 70, 70);
         g.DrawEllipse(&nodeBorder, modX - 35, modY - 35, 70, 70);
     }
 
-    // 5. النصوص والعناوين العلوية
     FontFamily fontFamily(L"Segoe UI");
     Font titleFont(&fontFamily, 16, FontStyleBold, UnitPixel);
     Font textFont(&fontFamily, 11, FontStyleBold, UnitPixel);
     SolidBrush brightText(Color(255, 220, 255, 230));
     SolidBrush greenText(Color(255, 80, 255, 180));
 
-    // شريط العنوان المضيء
     g.DrawString(L"G-X CONTROL CENTER", -1, &titleFont, PointF(20, 20), &greenText);
     g.DrawString(L"System Protected | High Performance Mode", -1, &textFont, PointF(20, 45), &brightText);
     
-    // نص النواة المركزية
     Font coreFont(&fontFamily, 22, FontStyleBold, UnitPixel);
     g.DrawString(L"G-X", -1, &coreFont, PointF(centerX - 24, centerY - 20), &brightText);
     g.DrawString(L"CORE", -1, &textFont, PointF(centerX - 20, centerY + 10), &greenText);
@@ -91,7 +80,7 @@ void DrawBrighterSpaceUI(Graphics& g, RECT rect) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_TIMER:
-            g_Angle += 0.008f; // دوران هادئ وسلس للأقسام
+            g_Angle += 0.008f;
             if (g_Angle >= 6.28318f) g_Angle = 0.0f;
             InvalidateRect(hwnd, NULL, FALSE);
             break;
@@ -99,7 +88,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            // Double Buffering لمنع أي ترميش أو تقطيع في الحركة
             RECT rect;
             GetClientRect(hwnd, &rect);
             HDC memDC = CreateCompatibleDC(hdc);
@@ -150,7 +138,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         NULL, NULL, hInstance, NULL
     );
 
-    SetTimer(hwnd, 1, 16, NULL); // ~60 FPS للحركة والانتقالات السينمائية
+    SetTimer(hwnd, 1, 16, NULL);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
